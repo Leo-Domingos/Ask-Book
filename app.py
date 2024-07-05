@@ -11,9 +11,10 @@ from langchain.prompts import PromptTemplate
 from langchain_google_genai.embeddings import GoogleGenerativeAIEmbeddings
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
+import os
 
 # Configure the Google Generative AI API
-APIKEY = "AIzaSyA8l9EJe722bzbmVgRjl30Pzhgbr9o_MiU"
+APIKEY = os.getenv('API_KEY')
 genai.configure(api_key=APIKEY)
 model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
