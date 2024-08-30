@@ -98,18 +98,18 @@ def summarize_book(texto, author, title):
     return resposta.text
 
 # Função para criar um objeto de perguntas e respostas
-def create_qa_object_internal(texto):
+def create_qa_object_internal(texto, author, title):
     text_splitter = CharacterTextSplitter(chunk_size=20000, chunk_overlap=200, separator= ' ')
     chunks = text_splitter.split_text(texto)
     retriever = VectorStoreRetriever(vectorstore=FAISS.from_texts(chunks, embeddings), search_k=5)
-    question_answer_chain = create_stuff_documents_chain(llm, prompt_template)
+    question_answer_chain = create_stuff_documents_chain(llm, prompt_template(author, title))
     chain = create_retrieval_chain(retriever, question_answer_chain)
     return chain
 
 # Função para criar ou recuperar o objeto de perguntas e respostas do cache
-def create_qa_object(texto):
+def create_qa_object(texto, author, title):
     # Criando o objeto de perguntas e respostas
-    qa_object = create_qa_object_internal(texto)
+    qa_object = create_qa_object_internal(texto, author, title)
     return qa_object
 
 # Função para processar uma pergunta
@@ -156,7 +156,7 @@ if uploaded_pdf is not None:
             st.markdown(f'<div class="highlight-box">{summary}</div>', unsafe_allow_html=True)
     elif option == "Pergunte ao livro":
         # Perguntas e Respostas
-        qa_object = create_qa_object(book_text)
+        qa_object = create_qa_object(book_text, author_name, book_name)
         st.subheader("Perguntas e Respostas")
 
         question = st.text_input("Faça uma pergunta sobre o livro")
