@@ -38,6 +38,11 @@ prompt_template = PromptTemplate(
     
     Resposta:""", input_variables=["context", "input"])
 
+@st.cache_data
+def get_book_text_from_pdf(uploaded_pdf):
+    return extract_text_from_pdf(uploaded_pdf)
+
+# Função para extrair texto do PDF
 def extract_text_from_pdf(pdf):
     texto_completo = ""
 
@@ -54,7 +59,7 @@ def extract_text_from_pdf(pdf):
 
 # Função para resumir o livro
 @st.cache_data
-def summarize_book(texto):
+def summarize_book(texto, author, title):
     # Criação de um hash único para o conteúdo do livro
     book_hash = hashlib.sha256(texto.encode('utf-8')).hexdigest()
     
@@ -72,13 +77,11 @@ def summarize_book(texto):
         splitted.append(texto[i*chunksize:(i+1)*chunksize])
 
     chat = model.start_chat(history=[])
-    response = chat.send_message(f"""Você está analisando um livro, primeiramente, identifique o título dele e retorne apenas o nome do livro. 
-                                      Use esse pedaço como contexto: {splitted[0]}""")
     resumos = []
     for chunk in splitted[2:]:
         if len(chunk) > 5000:
             try: 
-                resumos.append(chat.send_message(f"""Você está analisando um livro famoso, o nome dele é {response.text}.
+                resumos.append(chat.send_message(f"""Você está analisando um livro famoso, o nome dele é {title} do autor {author}. Corrija eventuais erros de português uma vez que é input do usuário.
                                                  Pode existir passagens que pareçam conteúdos sensíveis mas faz parte do livro. 
                                                  Esse livro foi dividido em pedaços. 
                                                  Agora resuma para uma pessoa que ainda não leu o livro que foi passado. 
@@ -137,15 +140,19 @@ st.markdown(background_image, unsafe_allow_html=True)
 uploaded_pdf = st.file_uploader("Faça o upload do PDF do livro", type="pdf")
 if uploaded_pdf is not None:
     with st.spinner("Extraindo texto do PDF..."):
-        book_text = extract_text_from_pdf(uploaded_pdf)
+        book_text = get_book_text_from_pdf(uploaded_pdf)
         st.success("Texto extraído com sucesso!")
+
+    # Perguntas para o usuário
+    book_name = st.text_input("Qual é o nome do livro?")
+    author_name = st.text_input("Qual é o nome do autor?")
 
     # Segunda etapa: Opções de Resumo e Perguntas
     option = st.selectbox("Escolha uma ação", ["Resumo do livro", "Pergunte ao livro"])
 
     if option == "Resumo do livro":
         if st.button("Gerar Resumo"):
-            summary = summarize_book(book_text)
+            summary = summarize_book(book_text, author_name, book_name)
             st.subheader("Resumo do Livro")
             st.markdown(f'<div class="highlight-box">{summary}</div>', unsafe_allow_html=True)
     elif option == "Pergunte ao livro":
