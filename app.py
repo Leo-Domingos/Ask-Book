@@ -27,11 +27,10 @@ llm = ChatGoogleGenerativeAI(
 
 # Criando embeddings do Google GenAI
 embeddings = GoogleGenerativeAIEmbeddings(model='models/embedding-001', google_api_key=APIKEY)
-prompt_template = PromptTemplate(
-    template="""Você é um leitor ávido e gosta de tudo relacionado à literatura. Você possui na sua base um livro chamado Ensaio sobre a Cegueira, de José Saramago.
+prompt_template = lambda autor, livro : PromptTemplate(
+    template=f"""Você é um leitor ávido e gosta de tudo relacionado à literatura. Você possui na sua base um livro chamado {livro}, de {autor}.
     Você será questionado sobre ele e precisa demonstrar entusiasmo nas suas respostas. Para respondê-las, use o contexto abaixo para responder à pergunta mas responda
-    de maneira geral, usando conhecimentos prévios sobre o livro
-    
+    de maneira geral, usando conhecimentos prévios sobre o livro"""+"""    
     {context}
     
     Pergunta: {input}
